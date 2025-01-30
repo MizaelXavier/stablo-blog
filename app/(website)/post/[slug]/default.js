@@ -26,6 +26,11 @@ export default function Post(props) {
     ? urlForImage(post.author.image)
     : null;
 
+  // Verifica se há vídeo no conteúdo do post
+  const hasVideo = post?.body?.some(
+    block => block._type === 'youtube' && block.url
+  );
+
   return (
     <>
       <Container className="!pt-0">
@@ -76,8 +81,9 @@ export default function Post(props) {
         </div>
       </Container>
 
-      <div className="relative z-0 mx-auto aspect-video max-w-screen-lg overflow-hidden lg:rounded-lg">
-        {imageProps && (
+      {/* Exibe a imagem apenas se não houver vídeo */}
+      {!hasVideo && imageProps && (
+        <div className="relative z-0 mx-auto aspect-video max-w-screen-lg overflow-hidden lg:rounded-lg">
           <Image
             src={imageProps.src}
             alt={post.mainImage?.alt || "Thumbnail"}
@@ -86,8 +92,8 @@ export default function Post(props) {
             sizes="100vw"
             className="object-cover"
           />
-        )}
-      </div>
+        </div>
+      )}
 
       <Container>
         <article className="mx-auto max-w-screen-md ">

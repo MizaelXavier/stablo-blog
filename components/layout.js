@@ -5,44 +5,47 @@ import { urlForImage } from "@/lib/sanity/image";
 import Navbar from "@/components/navbar";
 import NavbarAlt from "@/components/navbaralt";
 import { cx } from "@/utils/all";
-// import defaultOG from "../public/img/og-default.jpg";
-
+import { defaultSEOConfig } from "@/lib/seo.config";
 import Footer from "@/components/footer";
 // import PopupWidget from "../components/popupWidget";
 
 export default function Layout(props) {
   const { children } = props;
-  const ogimage = urlForImage(props?.openGraphImage) ?? "";
+  const ogimage = urlForImage(props?.openGraphImage) ?? "/img/og-default.jpg";
+  
+  // Merge default SEO config with page-specific props
+  const seoConfig = {
+    ...defaultSEOConfig,
+    title: props.title,
+    description: props.description || defaultSEOConfig.description,
+    canonical: props.url || defaultSEOConfig.canonical,
+    openGraph: {
+      ...defaultSEOConfig.openGraph,
+      url: props.url || defaultSEOConfig.openGraph.url,
+      title: props.title || defaultSEOConfig.defaultTitle,
+      description: props.description || defaultSEOConfig.description,
+      images: [
+        {
+          url: ogimage,
+          width: 800,
+          height: 600,
+          alt: props.title || defaultSEOConfig.defaultTitle
+        }
+      ],
+    }
+  };
+
   return (
     <>
       <Head>
         <link rel="preconnect" href="https://cdn.sanity.io/" />
         <link rel="dns-prefetch" href="https://cdn.sanity.io//" />
+        <meta name="robots" content="index, follow" />
+        <meta name="googlebot" content="index, follow" />
+        <meta name="language" content="pt-BR" />
+        <link rel="alternate" hrefLang="pt-BR" href={seoConfig.canonical} />
       </Head>
-      <NextSeo
-        title={props.title}
-        description={props.description}
-        canonical={props.url}
-        openGraph={{
-          url: props.url,
-          title: props.title,
-          description: props.description,
-          images: [
-            {
-              url: ogimage,
-              width: 800,
-              height: 600,
-              alt: props.title
-            }
-          ],
-          site_name: props.title
-        }}
-        twitter={{
-          handle: "@surjithctly",
-          site: "@surjithctly",
-          cardType: "summary_large_image"
-        }}
-      />
+      <NextSeo {...seoConfig} />
 
       <div
         className={cx(

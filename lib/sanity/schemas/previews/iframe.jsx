@@ -6,9 +6,15 @@ const IframePreview = ({ url, height }) => {
     return <p>Missing Embed URL</p>;
   }
 
+  const { id, service } = getVideoId(url);
+  const isVimeoVideo = id && service === "vimeo";
+  const finalURL = isVimeoVideo
+    ? `https://player.vimeo.com/video/${id}`
+    : url;
+
   return (
     <Iframe
-      url={url}
+      url={finalURL}
       width="100%"
       height={height || "350"}
       styles={{

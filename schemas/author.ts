@@ -29,10 +29,32 @@ export default {
     {
       name: 'bio',
       title: 'Bio',
-      type: 'array',
-      of: [
+      type: 'text'
+    },
+    {
+      name: 'occupation',
+      title: 'Occupation',
+      type: 'string'
+    },
+    {
+      name: 'social',
+      title: 'Social Media',
+      type: 'object',
+      fields: [
         {
-          type: 'block'
+          name: 'twitter',
+          title: 'Twitter URL',
+          type: 'url'
+        },
+        {
+          name: 'linkedin',
+          title: 'LinkedIn URL',
+          type: 'url'
+        },
+        {
+          name: 'github',
+          title: 'GitHub URL',
+          type: 'url'
         }
       ]
     }

@@ -10,7 +10,7 @@ import CategoryLabel from "@/components/blog/category";
 import AuthorCard from "@/components/blog/authorCard";
 import { hasVideo } from "@/lib/utils/postUtils";
 
-export default function Post(props) {
+export default function NoticiaPageTemplate(props) {
   const { loading, post } = props;
 
   const slug = post?.slug;
@@ -106,7 +106,7 @@ export default function Post(props) {
             <Link
               href="/"
               className="bg-brand-secondary/20 rounded-full px-5 py-2 text-sm text-blue-600 dark:text-blue-500 ">
-              ← View all posts
+              ← Ver todas as notícias
             </Link>
           </div>
           {post.author && <AuthorCard author={post.author} />}

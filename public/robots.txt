@@ -3,7 +3,8 @@ User-agent: *
 Allow: /
 
 # Host
-Host: https://stablo-pro.web3templates.com
+Host: https://closerbrasil.com
 
 # Sitemaps
-Sitemap: https://stablo-pro.web3templates.com/sitemap.xml
+Sitemap: https://closerbrasil.com/sitemap.xml
+Sitemap: https://closerbrasil.com.br/server-sitemap.xml

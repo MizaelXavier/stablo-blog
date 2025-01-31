@@ -25,12 +25,12 @@ export default function NavbarAlt(props) {
       ]
     },
     {
-      label: "About",
-      href: "/about"
+      label: "Sobre",
+      href: "/sobre"
     },
     {
-      label: "Contact",
-      href: "/contact"
+      label: "Contato",
+      href: "/contato"
     },
     {
       label: "Pages",

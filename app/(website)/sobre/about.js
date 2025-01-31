@@ -2,15 +2,35 @@ import Container from "@/components/container";
 import { urlForImage } from "@/lib/sanity/image";
 import Image from "next/image";
 import Link from "next/link";
+import StructuredData from "@/components/StructuredData";
 
 export default function About({ authors, settings }) {
+  const schema = {
+    "@context": "https://schema.org",
+    "@type": "AboutPage",
+    "name": "Sobre a Closer Brasil",
+    "description": "Conheça nossa equipe apaixonada e descubra mais sobre a Closer Brasil.",
+    "publisher": {
+      "@type": "Organization",
+      "name": "Closer Brasil",
+      "logo": settings?.logo || ""
+    },
+    "author": authors?.map(author => ({
+      "@type": "Person",
+      "name": author.name,
+      "image": urlForImage(author?.image)?.src || "",
+      "url": `/author/${author?.slug}`
+    }))
+  };
+
   return (
     <Container>
+      <StructuredData data={schema} />
       <h1 className="text-brand-primary mb-3 mt-2 text-center text-3xl font-semibold tracking-tight dark:text-white lg:text-4xl lg:leading-snug">
-        About
+        Sobre Nós
       </h1>
       <div className="text-center">
-        <p className="text-lg">We are a small passionate team.</p>
+        <p className="text-lg">Somos uma pequena equipe apaixonada.</p>
       </div>
 
       <div className="mb-16 mt-6 grid grid-cols-3 gap-5 md:mb-32 md:mt-16 md:gap-16">
@@ -38,18 +58,19 @@ export default function About({ authors, settings }) {
 
       <div className="prose mx-auto mt-14 text-center dark:prose-invert">
         <p>
-          We provide real-time connectivity to enable software
-          providers and financial institutions to build integrated
-          products for their small business customers.
+          Fornecemos conectividade em tempo real para permitir que 
+          provedores de software e instituições financeiras construam 
+          produtos integrados para seus clientes empresariais.
         </p>
         <p>
-          Our API infrastructure is leveraged by clients ranging from
-          lenders to corporate card providers and business forecasting
-          tools, with use cases including automatic reconciliation,
-          business dashboarding, and loan decisioning.
+          Nossa infraestrutura de API é utilizada por clientes que 
+          vão desde credores até provedores de cartões corporativos 
+          e ferramentas de previsão de negócios, com casos de uso 
+          incluindo reconciliação automática, painéis de negócios 
+          e decisões de empréstimos.
         </p>
         <p>
-          <Link href="/contact">Get in touch</Link>
+          <Link href="/contact">Entre em contato</Link>
         </p>
       </div>
     </Container>

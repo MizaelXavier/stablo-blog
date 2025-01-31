@@ -18,11 +18,11 @@ export default function Navbar(props) {
     },
     {
       label: "Sobre",
-      href: "/about"
+      href: "/sobre"
     },
     {
       label: "Contato",
-      href: "/contact"
+      href: "/contato"
     }
   ];
 

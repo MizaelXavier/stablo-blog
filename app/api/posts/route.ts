@@ -12,6 +12,24 @@ const writeClient = createClient({
   token: process.env.SANITY_API_WRITE_TOKEN
 });
 
+// Interfaces para tipagem
+interface SanityBlock {
+  _type: string;
+  _key: string;
+  [key: string]: any;
+}
+
+interface PostContent {
+  blocks: SanityBlock[];
+  mainImage?: {
+    _type: string;
+    asset: {
+      _type: string;
+      _ref: string;
+    };
+  };
+}
+
 export async function GET() {
   try {
     const query = `*[_type == "post"] | order(publishedAt desc) {
@@ -37,19 +55,43 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
     
-    // Converter o markdown para blocos do Sanity se o corpo do post for uma string
-    const postContent = typeof body.body === 'string' 
-      ? markdownToBlocks(body.body, {
-          mainImage: body.mainImage,
-          youtubeUrl: body.youtubeUrl
-        }) 
-      : { body: body.body, mainImage: body.mainImage };
+    // Processar o conteúdo do post
+    let postContent: PostContent;
     
-    // Adicionar chaves únicas aos blocos
-    const blocksWithKeys = postContent.body.map(block => ({
-      ...block,
-      _key: uuidv4()
-    }));
+    if (typeof body.body === 'string') {
+      const blocks = markdownToBlocks(body.body, {
+        mainImage: body.mainImage,
+        youtubeUrl: body.youtubeUrl
+      });
+      
+      postContent = {
+        blocks: blocks.map(block => ({
+          ...block,
+          _key: uuidv4()
+        })),
+        mainImage: body.mainImage ? {
+          _type: "image",
+          asset: {
+            _type: "reference",
+            _ref: body.mainImage
+          }
+        } : undefined
+      };
+    } else {
+      postContent = {
+        blocks: body.body.map((block: any) => ({
+          ...block,
+          _key: uuidv4()
+        })),
+        mainImage: body.mainImage ? {
+          _type: "image",
+          asset: {
+            _type: "reference",
+            _ref: body.mainImage
+          }
+        } : undefined
+      };
+    }
 
     const newPost = {
       _type: "post",
@@ -64,7 +106,7 @@ export async function POST(request: Request) {
         _ref: body.authorId,
       },
       publishedAt: new Date().toISOString(),
-      body: blocksWithKeys,
+      body: postContent.blocks,
       ...(postContent.mainImage && { mainImage: postContent.mainImage })
     };
 

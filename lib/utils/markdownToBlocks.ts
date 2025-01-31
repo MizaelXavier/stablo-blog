@@ -113,7 +113,12 @@ export function markdownToBlocks(markdown: string, options: MarkdownToBlocksOpti
     }
     
     // Processar texto normal com marcações
-    const spans = [];
+    const spans: {
+      _type: string;
+      _key: string;
+      text: string;
+      marks: string[];
+    }[] = [];
     let currentText = line;
     
     // Processar texto em negrito

@@ -26,7 +26,7 @@ if (!projectId) {
 /**
  * Checks if it's safe to create a client instance, as `@sanity/client` will throw an error if `projectId` is false
  */
-const client = projectId
+const sanityClient = projectId
   ? createClient({
       projectId,
       dataset,
@@ -37,12 +37,12 @@ const client = projectId
   : null;
 
 export const fetcher = async ([query, params]) => {
-  return client ? client.fetch(query, params) : [];
+  return sanityClient ? sanityClient.fetch(query, params) : [];
 };
 
 (async () => {
-  if (client) {
-    const data = await client.fetch(getAll);
+  if (sanityClient) {
+    const data = await sanityClient.fetch(getAll);
     if (!data || !data.length) {
       console.error(
         "Sanity returns empty array. Are you sure the dataset is public?"
@@ -52,52 +52,72 @@ export const fetcher = async ([query, params]) => {
 })();
 
 export async function getAllPosts() {
-  if (client) {
-    return (await client.fetch(postquery)) || [];
+  if (sanityClient) {
+    return (await sanityClient.fetch(postquery)) || [];
   }
   return [];
 }
 
 export async function getSettings() {
-  if (client) {
-    return (await client.fetch(configQuery)) || [];
+  if (sanityClient) {
+    return (await sanityClient.fetch(configQuery)) || [];
   }
   return [];
 }
 
-export async function getPostBySlug(slug) {
-  if (client) {
-    return (await client.fetch(singlequery, { slug })) || {};
-  }
-  return {};
+export async function getPostBySlug(slug: string) {
+  if (!sanityClient) return null;
+  const query = `*[_type == "post" && slug.current == $slug][0]{
+    _id,
+    title,
+    slug,
+    excerpt,
+    body,
+    mainImage,
+    publishedAt,
+    "author": author->{
+      _id,
+      name,
+      slug,
+      image,
+      bio
+    },
+    "categories": categories[]->{
+      _id,
+      title,
+      slug
+    }
+  }`;
+  const post = await sanityClient.fetch(query, { slug });
+  return post;
 }
 
 export async function getAllPostsSlugs() {
-  if (client) {
-    const slugs = (await client.fetch(pathquery)) || [];
-    return slugs.map(slug => ({ slug }));
-  }
-  return [];
+  if (!sanityClient) return [];
+  const query = `*[_type == "post"]{ "slug": slug.current }`;
+  const slugs = await sanityClient.fetch(query);
+  return slugs;
 }
+
 // Author
 export async function getAllAuthorsSlugs() {
-  if (client) {
-    const slugs = (await client.fetch(authorsquery)) || [];
+  if (sanityClient) {
+    const slugs = (await sanityClient.fetch(authorsquery)) || [];
     return slugs.map(slug => ({ author: slug }));
   }
   return [];
 }
 
 export async function getAuthorPostsBySlug(slug) {
-  if (client) {
-    return (await client.fetch(postsbyauthorquery, { slug })) || {};
+  if (sanityClient) {
+    return (await sanityClient.fetch(postsbyauthorquery, { slug })) || {};
   }
   return {};
 }
 
 export async function getAllAuthors() {
-  if (client) {
-    return (await client.fetch(allauthorsquery)) || [];
+  if (sanityClient) {
+    return (await sanityClient.fetch(allauthorsquery)) || [];
   }
   return [];
 }
@@ -105,31 +125,31 @@ export async function getAllAuthors() {
 // Category
 
 export async function getAllCategories() {
-  if (client) {
-    const slugs = (await client.fetch(catpathquery)) || [];
+  if (sanityClient) {
+    const slugs = (await sanityClient.fetch(catpathquery)) || [];
     return slugs.map(slug => ({ category: slug }));
   }
   return [];
 }
 
 export async function getPostsByCategory(slug) {
-  if (client) {
-    return (await client.fetch(postsbycatquery, { slug })) || {};
+  if (sanityClient) {
+    return (await sanityClient.fetch(postsbycatquery, { slug })) || {};
   }
   return {};
 }
 
 export async function getTopCategories() {
-  if (client) {
-    return (await client.fetch(catquery)) || [];
+  if (sanityClient) {
+    return (await sanityClient.fetch(catquery)) || [];
   }
   return [];
 }
 
 export async function getPaginatedPosts({ limit, pageIndex = 0 }) {
-  if (client) {
+  if (sanityClient) {
     return (
-      (await client.fetch(paginatedquery, {
+      (await sanityClient.fetch(paginatedquery, {
         pageIndex: pageIndex,
         limit: limit
       })) || []

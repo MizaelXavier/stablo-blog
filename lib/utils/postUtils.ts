@@ -20,6 +20,7 @@ export interface Post {
   author: {
     _type: 'reference';
     _ref: string;
+    name?: string;
   };
   publishedAt: string;
   categories?: Array<{

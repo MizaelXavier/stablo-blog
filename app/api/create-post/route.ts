@@ -12,12 +12,22 @@ const PostSchema = z.object({
   authorId: z.string().min(1, "ID do autor é obrigatório"),
   body: z.union([z.string(), z.array(z.any())]),
   excerpt: z.string().optional(),
-  mainImage: z.string().optional(),
   mainImageUrl: z.string().url().optional(),
   youtubeUrl: z.string().optional(),
   categories: z.array(z.string()).optional(),
   featured: z.boolean().optional()
 });
+
+interface PostContent {
+  blocks: any[];
+  mainImage?: {
+    _type: "image";
+    asset: {
+      _type: "reference";
+      _ref: string;
+    };
+  };
+}
 
 export async function POST(request: Request) {
   try {
@@ -43,29 +53,70 @@ export async function POST(request: Request) {
     }
 
     // Validar payload
-    const payload = await request.json();
-    const validatedData = PostSchema.parse(payload);
+    const body = await request.json();
+    const validatedData = PostSchema.parse(body);
 
-    // Fazer upload da imagem se fornecida via URL
-    let mainImageId = validatedData.mainImage;
+    console.log('📄 Dados recebidos:', validatedData);
+
+    let mainImageRef: string | undefined;
     if (validatedData.mainImageUrl) {
       try {
-        mainImageId = await uploadImageFromUrl(validatedData.mainImageUrl);
+        console.log('🖼️ Processando imagem principal...');
+        mainImageRef = await uploadImageFromUrl(validatedData.mainImageUrl);
+        console.log('✅ Imagem processada com sucesso:', mainImageRef);
       } catch (error) {
-        console.error('Erro ao fazer upload da imagem:', error);
-        // Continuar sem a imagem se houver erro no upload
+        console.error('❌ Erro ao processar imagem:', error);
+        throw new Error('Falha ao processar imagem');
       }
     }
 
-    // Converter o corpo do post se for uma string
-    const blocks = typeof validatedData.body === 'string' 
-      ? markdownToBlocks(validatedData.body, {
-          mainImage: mainImageId,
-          youtubeUrl: validatedData.youtubeUrl
-        })
-      : validatedData.body;
+    // Processar o conteúdo do post
+    let postContent: PostContent;
+    
+    if (typeof validatedData.body === 'string') {
+      const blocks = markdownToBlocks(validatedData.body, {
+        mainImage: mainImageRef,
+        youtubeUrl: validatedData.youtubeUrl
+      });
+      
+      postContent = {
+        blocks: blocks.map(block => ({
+          ...block,
+          _key: uuidv4()
+        })),
+        mainImage: mainImageRef ? {
+          _type: "image",
+          asset: {
+            _type: "reference",
+            _ref: mainImageRef
+          }
+        } : undefined
+      };
+    } else {
+      postContent = {
+        blocks: validatedData.body.map((block: any) => ({
+          ...block,
+          _key: uuidv4()
+        })),
+        mainImage: mainImageRef ? {
+          _type: "image",
+          asset: {
+            _type: "reference",
+            _ref: mainImageRef
+          }
+        } : undefined
+      };
+    }
 
-    // Preparar documento para o Sanity
+    // Modificar a construção do mainImage
+    const mainImage = mainImageRef ? {
+      _type: "image",
+      asset: {
+        _type: "reference",
+        _ref: mainImageRef
+      }
+    } : undefined;
+
     const newPost = {
       _type: "post",
       title: validatedData.title,
@@ -73,60 +124,25 @@ export async function POST(request: Request) {
         _type: "slug",
         current: validatedData.slug,
       },
+      excerpt: validatedData.excerpt,
       author: {
         _type: "reference",
         _ref: validatedData.authorId,
       },
-      body: blocks,
-      excerpt: validatedData.excerpt,
-      featured: validatedData.featured ?? false,
-      mainImage: mainImageId ? {
-        _type: "image",
-        asset: {
-          _type: "reference",
-          _ref: mainImageId
-        }
-      } : undefined,
-      categories: validatedData.categories?.map(catId => ({
-        _type: "reference",
-        _ref: catId
-      })),
       publishedAt: new Date().toISOString(),
+      body: postContent.blocks,
+      mainImage: mainImage,
     };
 
-    // Criar post no Sanity
-    const result = await client.create(newPost);
-
-    return NextResponse.json({
-      success: true,
-      data: {
-        id: result._id,
-        slug: result.slug.current,
-        title: result.title,
-        publishedAt: result.publishedAt
-      }
-    });
-
+    console.log('📝 Criando novo post...');
+    const createdPost = await client.create(newPost);
+    console.log('🎉 Post criado com sucesso:', createdPost._id);
+    
+    return NextResponse.json({ success: true, postId: createdPost._id });
   } catch (error) {
-    console.error("Erro ao criar post:", error);
-
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { 
-          success: false, 
-          error: "Dados inválidos", 
-          details: error.errors 
-        },
-        { status: 400 }
-      );
-    }
-
+    console.error('💥 Erro catastrófico:', error);
     return NextResponse.json(
-      { 
-        success: false, 
-        error: error instanceof Error ? error.message : "Erro interno do servidor",
-        details: error
-      },
+      { success: false, error: error instanceof Error ? error.message : "Erro desconhecido" },
       { status: 500 }
     );
   }

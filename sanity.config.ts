@@ -2,7 +2,7 @@ import { defineConfig } from "sanity";
 import { deskTool } from "sanity/desk";
 import { visionTool } from "@sanity/vision";
 import { schemaTypes } from "./schemas";
-import settings from "./lib/sanity/schemas/settings";
+import settings from "./schemas/settings";
 import {
   pageStructure,
   singletonPlugin
@@ -22,8 +22,8 @@ console.log(projectId);
 export default defineConfig({
   name: "default",
   title: "Closer Brasil",
-  projectId: 'scq7np6b',
-  dataset: 'production',
+  projectId,
+  dataset,
   basePath: "/studio",
 
   plugins: [

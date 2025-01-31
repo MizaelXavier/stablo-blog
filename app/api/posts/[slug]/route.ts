@@ -10,17 +10,33 @@ export async function GET(
       _id,
       title,
       slug,
+      excerpt,
       body[] {
         ...,
         _type == "youtube" => {
           ...,
           url,
+          title,
+          description,
+          thumbnail
         }
       },
       youtubeVideo,
       publishedAt,
-      "author": author->{name, slug, image, bio},
-      "categories": categories[]->{title, slug}
+      mainImage,
+      "author": author->{
+        _id,
+        name,
+        slug,
+        image,
+        bio,
+        "postCount": count(*[_type == "post" && references(^._id)])
+      },
+      "categories": categories[]->{
+        _id,
+        title,
+        slug
+      }
     }`;
     
     const post = await client.fetch(query, { slug: params.slug });

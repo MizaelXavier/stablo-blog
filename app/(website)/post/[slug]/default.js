@@ -8,6 +8,7 @@ import { parseISO, format } from "date-fns";
 
 import CategoryLabel from "@/components/blog/category";
 import AuthorCard from "@/components/blog/authorCard";
+import { hasVideo } from "@/lib/utils/postUtils";
 
 export default function Post(props) {
   const { loading, post } = props;
@@ -26,10 +27,7 @@ export default function Post(props) {
     ? urlForImage(post.author.image)
     : null;
 
-  // Verifica se há vídeo no conteúdo do post
-  const hasVideo = post?.body?.some(
-    block => block._type === 'youtube' && block.url
-  );
+  const videoPresent = hasVideo(post);
 
   return (
     <>
@@ -46,7 +44,7 @@ export default function Post(props) {
           <div className="mt-3 flex justify-center space-x-3 text-gray-500 ">
             <div className="flex items-center gap-3">
               <div className="relative h-10 w-10 flex-shrink-0">
-                {AuthorimageProps && (
+                {AuthorimageProps && post.author?.slug?.current && (
                   <Link href={`/author/${post.author.slug.current}`}>
                     <Image
                       src={AuthorimageProps.src}
@@ -60,9 +58,13 @@ export default function Post(props) {
               </div>
               <div>
                 <p className="text-gray-800 dark:text-gray-400">
-                  <Link href={`/author/${post.author.slug.current}`}>
-                    {post.author.name}
-                  </Link>
+                  {post.author?.slug?.current ? (
+                    <Link href={`/author/${post.author.slug.current}`}>
+                      {post.author.name}
+                    </Link>
+                  ) : (
+                    <span>{post.author?.name}</span>
+                  )}
                 </p>
                 <div className="flex items-center space-x-2 text-sm">
                   <time
@@ -82,7 +84,7 @@ export default function Post(props) {
       </Container>
 
       {/* Exibe a imagem apenas se não houver vídeo */}
-      {!hasVideo && imageProps && (
+      {!videoPresent && imageProps && (
         <div className="relative z-0 mx-auto aspect-video max-w-screen-lg overflow-hidden lg:rounded-lg">
           <Image
             src={imageProps.src}

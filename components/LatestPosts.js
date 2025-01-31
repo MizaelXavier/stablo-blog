@@ -3,7 +3,12 @@ import Link from "next/link";
 import { urlForImage } from "@/lib/sanity/image";
 import { formatDate } from "@/utils/all";
 import Label from "@/components/ui/label";
-import PlayIcon from "@/components/PlayIcon";
+
+// Função local para verificar vídeos
+const hasVideo = (post) => {
+  if (!post?.body || !Array.isArray(post.body)) return false;
+  return post.body.some(block => block._type === 'youtube' && block.url);
+};
 
 export default function LatestPosts({ posts = [] }) {
   // Filter out invalid posts (those without slug)
@@ -29,67 +34,63 @@ export default function LatestPosts({ posts = [] }) {
       </h2>
       <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
         {validPosts.map(post => {
-          const imageProps = post?.mainImage ? urlForImage(post.mainImage) : null;
-          const postUrl = post?.slug?.current ? `/post/${post.slug.current}` : "#";
-          
-          // Melhorada a verificação de vídeo
-          const hasVideo = Array.isArray(post?.body) && post.body.some(
-            block => block._type === 'youtube' && block.url
-          );
+          if (!post) return null;
 
-          // Log para debug
-          console.log(`Post ${post.title}:`, {
-            hasBody: !!post.body,
-            bodyLength: post.body?.length,
-            hasVideo,
-            firstBlock: post.body?.[0]
-          });
+          const imageProps = post?.mainImage ? urlForImage(post.mainImage) : null;
+          const videoPresent = hasVideo(post);
+          const postUrl = `/post/${post.slug.current}`;
           
           return (
-            <article key={post._id} className="group relative flex flex-col space-y-2">
+            <article key={post._id} className="group relative flex flex-col">
               {imageProps && (
-                <Link href={postUrl} className="relative block">
-                  <Image
-                    src={imageProps.src}
-                    alt={post.mainImage?.alt || "Imagem do Post"}
-                    width={400}
-                    height={300}
-                    className="rounded-md border border-gray-100 transition-all hover:scale-105"
-                  />
-                  {hasVideo && (
-                    <div className="absolute inset-0 bg-black bg-opacity-30">
-                      <PlayIcon />
-                    </div>
-                  )}
+                <Link href={postUrl}>
+                  <div className="relative aspect-video overflow-hidden rounded-md border border-gray-100">
+                    <Image
+                      src={imageProps.src}
+                      alt={post.mainImage?.alt || "Imagem do Post"}
+                      width={400}
+                      height={300}
+                      className="transition-all hover:scale-105"
+                    />
+                    {videoPresent && (
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-black bg-opacity-60">
+                          <div className="ml-1 h-0 w-0 border-y-[10px] border-l-[16px] border-r-0 border-solid border-y-transparent border-l-white"></div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </Link>
               )}
-              <div className="flex items-center space-x-3">
-                <div className="flex items-center space-x-2">
-                  {post.categories?.map(category => (
-                    category?.slug?.current ? (
-                      <Label key={category._id} color={category.color}>
-                        <Link href={`/category/${category.slug.current}`}>
-                          {category.title}
-                        </Link>
-                      </Label>
-                    ) : null
-                  ))}
-                </div>
-                <span className="text-sm text-gray-500 dark:text-gray-400">
+              <div className="flex flex-wrap items-baseline gap-3 mt-1">
+                {post.categories?.length > 0 && (
+                  <div className="flex flex-wrap items-center gap-2">
+                    {post.categories.map(category => (
+                      category?.slug?.current ? (
+                        <Label key={category._id} color={category.color}>
+                          <Link href={`/category/${category.slug.current}`}>
+                            {category.title}
+                          </Link>
+                        </Label>
+                      ) : null
+                    ))}
+                  </div>
+                )}
+                <span className="text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">
                   {formatDate(post.publishedAt || post._createdAt)}
                 </span>
               </div>
-              <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-100">
+              <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-100 mt-2">
                 <Link href={postUrl}>
                   {post.title}
                 </Link>
               </h3>
               {post.excerpt && (
-                <p className="text-gray-600 dark:text-gray-400">
+                <p className="text-gray-600 dark:text-gray-400 mt-2">
                   {post.excerpt}
                 </p>
               )}
-              <div className="flex items-center space-x-3">
+              <div className="flex items-center space-x-3 mt-2">
                 <Link
                   href={postUrl}
                   className="inline-flex items-center text-sm font-medium text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-500">

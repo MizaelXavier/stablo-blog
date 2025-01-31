@@ -1,17 +1,20 @@
 import { client } from "@/lib/sanity.client";
 import { NextResponse } from "next/server";
-import { PortableTextBlock } from "@portabletext/types";
 import { z } from "zod";
 import { v4 as uuidv4 } from 'uuid';
+import { markdownToBlocks } from "@/lib/utils/markdownToBlocks";
+import { uploadImageFromUrl } from "@/lib/utils/uploadImage";
 
 // Schema de validação para o payload
 const PostSchema = z.object({
   title: z.string().min(1, "Título é obrigatório"),
   slug: z.string().min(1, "Slug é obrigatório"),
   authorId: z.string().min(1, "ID do autor é obrigatório"),
-  body: z.array(z.any()).min(1, "Conteúdo é obrigatório"),
+  body: z.union([z.string(), z.array(z.any())]),
   excerpt: z.string().optional(),
   mainImage: z.string().optional(),
+  mainImageUrl: z.string().url().optional(),
+  youtubeUrl: z.string().optional(),
   categories: z.array(z.string()).optional(),
   featured: z.boolean().optional()
 });
@@ -43,11 +46,24 @@ export async function POST(request: Request) {
     const payload = await request.json();
     const validatedData = PostSchema.parse(payload);
 
-    // Adicionar chaves únicas aos blocos do corpo
-    const blocksWithKeys = validatedData.body.map(block => ({
-      ...block,
-      _key: uuidv4()
-    }));
+    // Fazer upload da imagem se fornecida via URL
+    let mainImageId = validatedData.mainImage;
+    if (validatedData.mainImageUrl) {
+      try {
+        mainImageId = await uploadImageFromUrl(validatedData.mainImageUrl);
+      } catch (error) {
+        console.error('Erro ao fazer upload da imagem:', error);
+        // Continuar sem a imagem se houver erro no upload
+      }
+    }
+
+    // Converter o corpo do post se for uma string
+    const blocks = typeof validatedData.body === 'string' 
+      ? markdownToBlocks(validatedData.body, {
+          mainImage: mainImageId,
+          youtubeUrl: validatedData.youtubeUrl
+        })
+      : validatedData.body;
 
     // Preparar documento para o Sanity
     const newPost = {
@@ -61,14 +77,14 @@ export async function POST(request: Request) {
         _type: "reference",
         _ref: validatedData.authorId,
       },
-      body: blocksWithKeys,
+      body: blocks,
       excerpt: validatedData.excerpt,
       featured: validatedData.featured ?? false,
-      mainImage: validatedData.mainImage ? {
+      mainImage: mainImageId ? {
         _type: "image",
         asset: {
           _type: "reference",
-          _ref: validatedData.mainImage
+          _ref: mainImageId
         }
       } : undefined,
       categories: validatedData.categories?.map(catId => ({

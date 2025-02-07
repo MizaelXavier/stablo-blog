@@ -10,12 +10,10 @@ const PostSchema = z.object({
   title: z.string().min(1, "Título é obrigatório"),
   slug: z.string().min(1, "Slug é obrigatório"),
   authorId: z.string().min(1, "ID do autor é obrigatório"),
-  body: z.union([z.string(), z.array(z.any())]),
+  body: z.string().min(1, "Conteúdo é obrigatório"),
   excerpt: z.string().optional(),
   mainImageUrl: z.string().url().optional(),
-  youtubeUrl: z.string().optional(),
-  categories: z.array(z.string()).optional(),
-  featured: z.boolean().optional()
+  youtubeUrl: z.string().optional()
 });
 
 interface PostContent {
@@ -27,6 +25,19 @@ interface PostContent {
       _ref: string;
     };
   };
+}
+
+interface Block {
+  _type: string;
+  _key: string;
+  url?: string;
+  style?: string;
+  markDefs?: any[];
+  children?: Array<{
+    _type: string;
+    _key: string;
+    text: string;
+  }>;
 }
 
 export async function POST(request: Request) {
@@ -73,49 +84,41 @@ export async function POST(request: Request) {
     // Processar o conteúdo do post
     let postContent: PostContent;
     
-    if (typeof validatedData.body === 'string') {
-      const blocks = markdownToBlocks(validatedData.body, {
-        mainImage: mainImageRef,
-        youtubeUrl: validatedData.youtubeUrl
+    // Criar os blocos formatados
+    const blocks: Block[] = [];
+    
+    // Se houver URL do YouTube, adiciona como primeiro bloco
+    if (validatedData.youtubeUrl) {
+      blocks.push({
+        _type: "youtube",
+        _key: uuidv4(),
+        url: validatedData.youtubeUrl
       });
-      
-      postContent = {
-        blocks: blocks.map(block => ({
-          ...block,
-          _key: uuidv4()
-        })),
-        mainImage: mainImageRef ? {
-          _type: "image",
-          asset: {
-            _type: "reference",
-            _ref: mainImageRef
-          }
-        } : undefined
-      };
-    } else {
-      postContent = {
-        blocks: validatedData.body.map((block: any) => ({
-          ...block,
-          _key: uuidv4()
-        })),
-        mainImage: mainImageRef ? {
-          _type: "image",
-          asset: {
-            _type: "reference",
-            _ref: mainImageRef
-          }
-        } : undefined
-      };
     }
-
-    // Modificar a construção do mainImage
-    const mainImage = mainImageRef ? {
-      _type: "image",
-      asset: {
-        _type: "reference",
-        _ref: mainImageRef
-      }
-    } : undefined;
+    
+    // Adiciona o bloco de texto
+    blocks.push({
+      _type: "block",
+      _key: uuidv4(),
+      style: "normal",
+      markDefs: [],
+      children: [{
+        _type: "span",
+        _key: uuidv4(),
+        text: validatedData.body
+      }]
+    });
+    
+    postContent = {
+      blocks,
+      mainImage: mainImageRef ? {
+        _type: "image",
+        asset: {
+          _type: "reference",
+          _ref: mainImageRef
+        }
+      } : undefined
+    };
 
     const newPost = {
       _type: "post",
@@ -131,7 +134,7 @@ export async function POST(request: Request) {
       },
       publishedAt: new Date().toISOString(),
       body: postContent.blocks,
-      mainImage: mainImage,
+      mainImage: postContent.mainImage
     };
 
     console.log('📝 Criando novo post...');

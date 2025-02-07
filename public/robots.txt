@@ -7,4 +7,4 @@ Host: https://closerbrasil.com
 
 # Sitemaps
 Sitemap: https://closerbrasil.com/sitemap.xml
-Sitemap: https://closerbrasil.com.br/server-sitemap.xml
+Sitemap: https://closerbrasil.com/server-sitemap.xml

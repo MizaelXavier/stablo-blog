@@ -1,6 +1,6 @@
 /** @type {import('next-sitemap').IConfig} */
 module.exports = {
-  siteUrl: process.env.NEXT_PUBLIC_SITE_URL || 'https://closerbrasil.com.br',
+  siteUrl: process.env.NEXT_PUBLIC_SITE_URL || 'https://closerbrasil.com',
   generateRobotsTxt: true,
   robotsTxtOptions: {
     policies: [
@@ -10,7 +10,7 @@ module.exports = {
       },
     ],
     additionalSitemaps: [
-      'https://closerbrasil.com.br/server-sitemap.xml',
+      'https://closerbrasil.com/server-sitemap.xml',
     ],
   },
   changefreq: 'daily',
@@ -19,7 +19,7 @@ module.exports = {
   exclude: ['/server-sitemap.xml'],
   alternateRefs: [
     {
-      href: 'https://closerbrasil.com.br',
+      href: 'https://closerbrasil.com',
       hreflang: 'pt-BR',
     },
   ],

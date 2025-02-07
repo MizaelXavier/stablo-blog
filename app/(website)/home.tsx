@@ -2,7 +2,22 @@ import Link from "next/link";
 import Container from "@/components/container";
 import PostList from "@/components/postlist";
 
-export default function Post({ posts }) {
+async function getPosts() {
+  try {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL}/api/posts?limit=14`, {
+      next: { revalidate: 60 }
+    });
+    const data = await response.json();
+    return data.posts || [];
+  } catch (error) {
+    console.error("Erro ao buscar posts:", error);
+    return [];
+  }
+}
+
+export default async function Post() {
+  const posts = await getPosts();
+
   return (
     <>
       {posts && (
@@ -26,7 +41,7 @@ export default function Post({ posts }) {
             <Link
               href="/archive"
               className="relative inline-flex items-center gap-1 rounded-md border border-gray-300 bg-white px-3 py-2 pl-4 text-sm font-medium text-gray-500 hover:bg-gray-50 focus:z-20 disabled:pointer-events-none disabled:opacity-40 dark:border-gray-500 dark:bg-gray-800 dark:text-gray-300">
-              <span>View all Posts</span>
+              <span>Ver todos os Posts</span>
             </Link>
           </div>
         </Container>

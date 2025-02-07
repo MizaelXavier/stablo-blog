@@ -77,9 +77,9 @@ export default function NavbarAlt(props) {
   return (
     <Container className="!py-0">
       <nav className="my-4">
-        <Disclosure>
+        <Disclosure as="div">
           {({ open }) => (
-            <>
+            <div>
               <div className="flex flex-wrap justify-between md:gap-10 lg:flex-nowrap">
                 <div className="flex w-full items-center justify-between lg:w-auto">
                   <Link href="/" className="w-28 dark:hidden">
@@ -134,27 +134,25 @@ export default function NavbarAlt(props) {
                   </Disclosure.Button>
                 </div>
                 <div className="flex items-center gap-3">
-                  <div className="hidden w-full flex-col items-center lg:flex lg:w-auto lg:flex-row ">
+                  <div className="hidden w-full flex-col items-center lg:flex lg:w-auto lg:flex-row">
                     {menu.map((item, index) => (
-                      <>
+                      <div key={index + item.label}>
                         {item.children && item.children.length > 0 ? (
                           <DropdownMenu
                             menu={item}
-                            key={index + item.label}
                             items={item.children}
                             mobile={props.mobile}
                           />
                         ) : (
                           <Link
                             href={item.href}
-                            key={index + item.label}
                             className="rounded-full px-5 py-2 font-medium text-gray-600 outline-none ring-blue-100 hover:text-blue-500 focus-visible:text-blue-500 focus-visible:ring-2 dark:text-gray-400"
                             target={item.external ? "_blank" : ""}
                             rel={item.external ? "noopener" : ""}>
                             {item.label}
                           </Link>
                         )}
-                      </>
+                      </div>
                     ))}
                   </div>
                   <div className="hidden lg:block">
@@ -164,28 +162,26 @@ export default function NavbarAlt(props) {
                   </div>
                 </div>
               </div>
-              <Disclosure.Panel>
-                <div className="order-2 -ml-5 mt-5 flex w-full flex-col items-start justify-start lg:hidden">
+              <Disclosure.Panel className="md:hidden">
+                <div className="space-y-2 pt-2 pb-3">
                   {menu.map((item, index) => (
-                    <>
+                    <div key={index + item.label}>
                       {item.children && item.children.length > 0 ? (
                         <DropdownMenu
                           menu={item}
-                          key={index + item.label}
                           items={item.children}
                           mobile={true}
                         />
                       ) : (
                         <Link
                           href={item.href}
-                          key={index + item.label}
                           className="rounded-full px-5 py-2 text-sm font-medium text-gray-600 outline-none ring-blue-100 hover:text-blue-500 focus-visible:text-blue-500 focus-visible:ring-2 dark:text-gray-400"
                           target={item.external ? "_blank" : ""}
                           rel={item.external ? "noopener" : ""}>
                           {item.label}
                         </Link>
                       )}
-                    </>
+                    </div>
                   ))}
                   <div className="mt-2 px-5">
                     <form action="/search" method="GET">
@@ -194,7 +190,7 @@ export default function NavbarAlt(props) {
                   </div>
                 </div>
               </Disclosure.Panel>
-            </>
+            </div>
           )}
         </Disclosure>
       </nav>
@@ -206,13 +202,13 @@ const DropdownMenu = ({ menu, items, mobile }) => {
   return (
     <Menu as="div" className="relative text-left">
       {({ open }) => (
-        <>
+        <div className="relative">
           <Menu.Button
             className={cx(
-              "flex items-center gap-x-1 rounded-full px-5 py-2  font-medium outline-none ring-blue-100 transition-all focus-visible:text-blue-500 focus-visible:ring-2",
+              "flex items-center gap-x-1 rounded-full px-5 py-2 font-medium outline-none ring-blue-100 transition-all focus-visible:text-blue-500 focus-visible:ring-2",
               open
                 ? "text-blue-500 hover:text-blue-500"
-                : " text-gray-600 dark:text-gray-400 ",
+                : "text-gray-600 dark:text-gray-400",
               mobile
                 ? "w-full px-4 py-2 text-sm"
                 : "inline-block px-4 py-2"
@@ -221,21 +217,21 @@ const DropdownMenu = ({ menu, items, mobile }) => {
             <ChevronDownIcon className="mt-0.5 h-4 w-4" />
           </Menu.Button>
           <Transition
-            as={Fragment}
-            enter="lg:transition lg:ease-out lg:duration-100"
-            enterFrom="lg:transform lg:opacity-0 lg:scale-95"
-            enterTo="lg:transform lg:opacity-100 lg:scale-100"
-            leave="lg:transition lg:ease-in lg:duration-75"
-            leaveFrom="lg:transform lg:opacity-100 lg:scale-100"
-            leaveTo="lg:transform lg:opacity-0 lg:scale-95">
+            enter="transition duration-100 ease-out"
+            enterFrom="transform scale-95 opacity-0"
+            enterTo="transform scale-100 opacity-100"
+            leave="transition duration-75 ease-out"
+            leaveFrom="transform scale-100 opacity-100"
+            leaveTo="transform scale-95 opacity-0"
+          >
             <Menu.Items
               className={cx(
-                "z-20 origin-top-left rounded-md  focus:outline-none  lg:absolute lg:left-0  lg:w-56",
-                !mobile && "bg-white shadow-lg  dark:bg-gray-800"
+                "absolute z-20 mt-2 w-56 origin-top-left rounded-md focus:outline-none",
+                !mobile && "bg-white shadow-lg dark:bg-gray-800"
               )}>
               <div className={cx(!mobile && "py-3")}>
                 {items.map((item, index) => (
-                  <Menu.Item as="div" key={index}>
+                  <Menu.Item key={index}>
                     {({ active }) => (
                       <Link
                         href={item?.path ? item.path : "#"}
@@ -245,7 +241,7 @@ const DropdownMenu = ({ menu, items, mobile }) => {
                             ? "text-blue-500"
                             : "text-gray-700 hover:text-blue-500 focus:text-blue-500 dark:text-gray-300"
                         )}>
-                        <span> {item.title}</span>
+                        <span>{item.title}</span>
                       </Link>
                     )}
                   </Menu.Item>
@@ -253,7 +249,7 @@ const DropdownMenu = ({ menu, items, mobile }) => {
               </div>
             </Menu.Items>
           </Transition>
-        </>
+        </div>
       )}
     </Menu>
   );
